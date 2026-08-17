@@ -1,0 +1,16 @@
+Project: URL Shortener Service
+
+We need a simple backend service that lets a user submit a long URL
+and receive back a short URL. When someone visits the short URL,
+they should be redirected to the original long URL.
+
+Basic requirements:
+- Endpoint to create a short URL from a long URL
+- Endpoint to redirect from short URL to the original long URL
+- Short codes should be unique
+- Store the mapping somewhere persistent (a simple database is fine)
+- Basic input validation (must be a valid URL)
+- No user accounts / authentication needed for this version
+
+This is a learning exercise, so keep the scope small â€” no analytics
+dashboard, no custom aliases, no rate limiting needed for v1.
