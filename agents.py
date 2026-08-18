@@ -1,4 +1,18 @@
 import os
+import sys
+
+# Disable telemetry and ensure UTF-8 encoding
+os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
+os.environ["OTEL_SDK_DISABLED"] = "true"
+os.environ["PYTHONIOENCODING"] = "utf-8"
+
+if sys.platform == "win32":
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")
+        sys.stderr.reconfigure(encoding="utf-8")
+    except Exception:
+        pass
+
 from dotenv import load_dotenv
 from crewai import Agent, LLM
 from llm_rotator import enable_key_rotation

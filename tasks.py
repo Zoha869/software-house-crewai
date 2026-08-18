@@ -46,10 +46,10 @@ def build_tasks(requirements_document: str):
     development_task = Task(
         description=(
             "Write the actual code following the architecture document. "
-            "The code must be clean, commented, and runnable. "
+            "The code must be clean, modular, commented, concise, and runnable. "
             "Clearly specify the file structure."
         ),
-        expected_output="Complete code (with file structure) + short explanation",
+        expected_output="Complete runnable code (with file structure) + short explanation",
         agent=developer,
         context=[architecture_task],
     )

@@ -21,7 +21,7 @@ from agents import (
 from tasks import build_tasks
 
 
-def build_crew(requirements_document: str) -> Crew:
+def build_crew(requirements_document: str, task_callback=None) -> Crew:
     tasks = build_tasks(requirements_document)
 
     crew = Crew(
@@ -38,5 +38,22 @@ def build_crew(requirements_document: str) -> Crew:
         tasks=tasks,
         process=Process.sequential,
         verbose=True,
+        # task_callback fires after each task finishes — the FastAPI
+        # backend uses this to push live progress events to the frontend.
+        task_callback=task_callback,
     )
     return crew
+
+
+# Fixed pipeline order — used by the API layer to know which agent
+# is "up next" before its task actually completes.
+AGENT_SEQUENCE = [
+    "Feature Extractor",
+    "Architect",
+    "Developer",
+    "QA Tester",
+    "Security Reviewer",
+    "Performance Reviewer",
+    "Maintainability Reviewer",
+    "Test Coverage Reviewer",
+]

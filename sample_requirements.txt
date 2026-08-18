@@ -12,5 +12,5 @@ Basic requirements:
 - Basic input validation (must be a valid URL)
 - No user accounts / authentication needed for this version
 
-This is a learning exercise, so keep the scope small â€” no analytics
+This is a learning exercise, so keep the scope small - no analytics
 dashboard, no custom aliases, no rate limiting needed for v1.

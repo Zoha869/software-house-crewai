@@ -1,0 +1,81 @@
+System Design Document
+CrewAI — Software Engineering Multi-Agent System
+Prepared by: Zoha Javed  |  Date: 18-08-2026
+1. Goal & Scope
+Build a multi-agent system with CrewAI that simulates a small software engineering team: a requirements document goes in, and a working (small-scale) implementation plus a set of independent quality reviews come out. The goal of this task is to learn multi-agent orchestration — how agents hand work to each other, and which agent needs which capability (tool) to do its job for real rather than just describe it. This is a learning-scale project, not a production build.
+2. System Flow
+The pipeline is sequential for the first three agents, since each genuinely depends on the previous one's output. From Agent 3 onward, four review agents (4–7) all read the same code independently — they don't depend on each other, only on the Developer's output. Agent 8 runs last because it needs both the code and the QA Tester's test cases to judge what's covered.
+Feature Extractor → Architect → Developer → { QA Tester, Security Reviewer, Performance Reviewer, Maintainability Reviewer } → Test Coverage Reviewer
+3. Agent Breakdown
+Agent
+Role
+Input
+Output
+Tool(s) Required
+1
+Feature Extractor
+Requirements document
+Structured feature list + assumptions
+FileReadTool
+2
+Architect
+Feature list
+Scoped system architecture
+WebsiteSearchTool / SerperDevTool
+3
+Developer
+Architecture doc
+Working code + file structure
+FileWriterTool, CodeInterpreterTool
+4
+QA Tester
+Code
+Test cases + pass/fail report
+CodeInterpreterTool
+5
+Security Reviewer
+Code
+Injection / auth / secrets / deserialization findings
+SerperDevTool, FileReadTool
+6
+Performance Reviewer
+Code
+Complexity / N+1 / allocation findings
+CodeInterpreterTool
+7
+Maintainability Reviewer
+Code
+Naming / coupling / dead-abstraction findings
+FileReadTool (reasoning-only)
+8
+Test Coverage Reviewer
+Code + QA's test cases
+Untested / untestable report
+CodeInterpreterTool (coverage run)
+4. Tool Research
+CrewAI agents reason with an LLM by default, but an LLM cannot read a real file, execute code, or look up current information on its own — it can only generate text. A "tool" gives an agent an actual capability beyond text generation. The table below covers the tools researched for this system, from the crewai_tools package.
+Tool
+What it does
+Why it's needed here
+FileReadTool
+Reads the content of a file from disk and gives it to the agent as text.
+Feature Extractor and reviewers need the actual requirements/code content, not just a description of it.
+FileWriterTool
+Writes generated content to a file on disk.
+Developer needs to persist generated code as real files, not just return text.
+CodeInterpreterTool
+Runs code in a sandboxed environment and returns the real output/errors.
+Developer, QA, Performance, and Test Coverage all need to verify claims by execution, not by the LLM guessing what code would do.
+WebsiteSearchTool / SerperDevTool
+Searches the web / a specific site for current information.
+Architect and Security Reviewer need up-to-date practices and vulnerability information that may postdate the model's training.
+5. Design Rationale — the pattern behind the tool choices
+Agents that only read and reason (Feature Extractor, Maintainability Reviewer) need little to no tooling — their job is interpretation, which the LLM can do directly.
+Agents that verify or execute (Developer, QA Tester, Performance Reviewer, Test Coverage Reviewer) need CodeInterpreterTool — without it, they'd be guessing whether code works instead of proving it.
+Agents that need current, external information (Architect, Security Reviewer) need a web search tool — best practices and known vulnerabilities change faster than a model's training data.
+6. Orchestration Mechanism
+CrewAI's context=[...] parameter on a Task automatically injects a prior task's output into the next task's prompt — this is what lets agents hand off work without manually copying results between them. The pipeline uses Process.sequential, so tasks execute in a fixed order; the four review agents each declare context=[development_task], so they all receive the Developer's code independently. A task_callback on the Crew fires after each task completes, which is also how live progress is reported to the frontend dashboard.
+7. Next Steps
+Wire the researched tools into agents.py for the agents that need them (FileReadTool, FileWriterTool, CodeInterpreterTool, a web search tool).
+Test each tool-equipped agent individually before re-running the full pipeline.
+Document any tool-specific setup required (e.g. CodeInterpreterTool needs Docker running locally).
