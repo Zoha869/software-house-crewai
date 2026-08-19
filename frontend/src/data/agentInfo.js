@@ -2,74 +2,106 @@ export const AGENTS_METADATA = [
   {
     id: "feature_extractor",
     name: "Feature Extractor",
-    role: "Requirements Analyst / Feature Extractor",
+    role: "Requirements Analyst",
+    dept: "ANALYSIS",
+    sheet: "A-01",
     tool: "FileReadTool",
-    description: "Parses raw requirement documents and extracts concrete, testable features and explicit assumptions.",
-    color: "#6366f1", // Indigo
-    icon: "FileText"
+    description: "Parses the brief and extracts concrete, testable features and explicit assumptions.",
+    clientSummary: "We reviewed your requirements and broke them down into clear, testable features. This makes sure nothing gets missed during development.",
+    color: "#5AD1E0",
+    icon: "FileText",
+    stage: "Planning"
   },
   {
     id: "architect",
     name: "Architect",
     role: "Software Architect",
-    tool: "WebsiteSearchTool / SerperDevTool",
-    description: "Designs the appropriately-scoped system architecture, component boundaries, and data flow.",
-    color: "#8b5cf6", // Purple
-    icon: "Cpu"
+    dept: "ARCHITECTURE",
+    sheet: "A-02",
+    tool: "System Design",
+    description: "Drafts the system architecture, component boundaries, and data flow — scoped, not over-built.",
+    clientSummary: "We designed how your software will be structured — the main building blocks and how they connect. Kept simple and focused on what you asked for.",
+    color: "#5AD1E0",
+    icon: "Cpu",
+    stage: "Planning"
   },
   {
     id: "developer",
     name: "Developer",
     role: "Software Developer",
-    tool: "FileWriterTool, CodeInterpreterTool",
-    description: "Writes production-quality, runnable code and file structure following the architecture spec.",
-    color: "#06b6d4", // Cyan
-    icon: "Code"
+    dept: "CONSTRUCTION",
+    sheet: "C-01",
+    tool: "Code Synthesis",
+    description: "Builds production-quality, runnable code and file structure to the architecture spec.",
+    clientSummary: "We wrote the actual code for your project — clean, working, and ready to run. This is the core build phase.",
+    color: "#E8935B",
+    icon: "Code",
+    stage: "Building"
   },
   {
     id: "qa_tester",
     name: "QA Tester",
-    role: "QA Tester",
-    tool: "CodeInterpreterTool",
-    description: "Generates functional and edge-case test suites, validates execution, and issues pass/fail reports.",
-    color: "#10b981", // Emerald
-    icon: "CheckCircle"
+    role: "QA Engineer",
+    dept: "QUALITY",
+    sheet: "Q-01",
+    tool: "Test Execution",
+    description: "Runs functional and edge-case test suites, issues a pass/fail report against requirements.",
+    clientSummary: "We tested the software against your requirements — checking that every feature works as expected, including edge cases.",
+    color: "#5AD1A8",
+    icon: "CheckCircle",
+    stage: "Quality Check"
   },
   {
     id: "security_reviewer",
     name: "Security Reviewer",
-    role: "Application Security Engineer",
-    tool: "SerperDevTool, FileReadTool",
-    description: "Strictly audits injection risks, auth/authz gaps, hardcoded secrets, and unsafe deserialization.",
-    color: "#f59e0b", // Amber
-    icon: "Shield"
+    role: "AppSec Engineer",
+    dept: "AUDIT",
+    sheet: "R-01",
+    tool: "OWASP Review",
+    description: "Audits injection risk, auth gaps, hardcoded secrets, and unsafe deserialization — with severity.",
+    clientSummary: "We checked your software for common security risks — making sure your data and users are protected.",
+    color: "#F58080",
+    icon: "Shield",
+    stage: "Audit"
   },
   {
     id: "performance_reviewer",
     name: "Performance Reviewer",
     role: "Performance Engineer",
-    tool: "CodeInterpreterTool",
-    description: "Identifies algorithmic complexity bottlenecks, N+1 query patterns, and hot-path allocations.",
-    color: "#ec4899", // Pink
-    icon: "Gauge"
+    dept: "AUDIT",
+    sheet: "R-02",
+    tool: "Complexity Analysis",
+    description: "Flags algorithmic complexity, N+1 patterns, and hot-path allocation issues.",
+    clientSummary: "We made sure your software runs fast and smooth — checking for any performance bottlenecks.",
+    color: "#F58080",
+    icon: "Gauge",
+    stage: "Audit"
   },
   {
     id: "maintainability_reviewer",
     name: "Maintainability Reviewer",
-    role: "Maintainability Reviewer",
-    tool: "FileReadTool",
-    description: "Assesses naming clarity, tight coupling, and dead or over-engineered abstractions.",
-    color: "#3b82f6", // Blue
-    icon: "Layers"
+    role: "Senior Engineer",
+    dept: "AUDIT",
+    sheet: "R-03",
+    tool: "Code Review",
+    description: "Checks naming clarity, coupling, and dead or over-engineered abstractions.",
+    clientSummary: "We reviewed the code quality — making sure it's clean, well-organized, and easy to maintain in the future.",
+    color: "#F58080",
+    icon: "Layers",
+    stage: "Audit"
   },
   {
     id: "test_coverage_reviewer",
     name: "Test Coverage Reviewer",
     role: "QA Coverage Lead",
-    tool: "CodeInterpreterTool",
-    description: "Highlights gaps between QA test cases and source code, flagging untested and untestable areas.",
-    color: "#14b8a6", // Teal
-    icon: "Target"
+    dept: "AUDIT",
+    sheet: "R-04",
+    tool: "Coverage Analysis",
+    description: "Cross-checks QA's tests against the code — what's untested, and what's untestable, and why.",
+    clientSummary: "We verified that all the important parts of your software are properly tested — so you can trust it works.",
+    color: "#F58080",
+    icon: "Target",
+    stage: "Audit"
   }
 ];
 

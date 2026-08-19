@@ -1,24 +1,3 @@
-"""
-api.py
-------
-FastAPI backend jo CrewAI multi-agent pipeline ko frontend ke liye
-expose karta hai.
-
-Do endpoints:
-  POST /api/run            -> naya run shuru karta hai, run_id deta hai
-  GET  /api/stream/{run_id} -> Server-Sent Events (SSE) se live progress
-                                stream karta hai (agent-by-agent status)
-
-Kaam kaise karta hai:
-- crew.kickoff() ek blocking call hai (poora pipeline chalne tak rukta
-  hai), isliye isko ek background thread mein chalate hain taake
-  server responsive rahe.
-- Har run ke liye ek queue.Queue banate hain. task_callback (crew.py
-  mein wire kiya hua) har agent ka task complete hone par is queue
-  mein event daal deta hai. SSE endpoint is queue ko poll karke
-  browser tak events pahonchata hai.
-"""
-
 import json
 import os
 import queue
@@ -39,7 +18,8 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-from fastapi import FastAPI
+import litellm
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -47,6 +27,101 @@ from pydantic import BaseModel
 from crew import build_crew, AGENT_SEQUENCE
 
 app = FastAPI(title="Software House Crew API")
+
+# ---------------------------------------------------------------------
+# Intake (Account Manager) chat
+# ---------------------------------------------------------------------
+# Client seedhe 8-agent pipeline ko requirements nahi dete — pehle ek
+# "Account Manager" LLM unse baat karke requirement confirm karta hai
+# (jaise real software house mein pehla client call hota hai), phir
+# jab requirement clear ho jaye to ek structured brief finalize karke
+# engineering pipeline (8 agents) ko handover karta hai.
+#
+# `enable_key_rotation` already CrewAI ke `from crew import ...` chain
+# (crew -> agents) se patch ho chuka hai, is liye litellm.completion
+# yahan bhi automatically rotating keys use karega.
+
+INTAKE_SYSTEM_PROMPT = """You are Sana, the Account Manager at Forge & Co, a boutique \
+software house. A prospective client is describing a project they want built. \
+Your job is to run a short, friendly intake consultation before engineering \
+picks it up.
+
+Rules:
+- Ask about ONE or TWO things at a time — never a giant questionnaire.
+- Focus only on what actually changes engineering scope: core features, \
+who the users are, any hard constraints (platform, integrations, data), \
+and what's explicitly out of scope. Don't ask about budget or timeline.
+- Keep messages short (2-5 sentences), warm, and professional — like a real \
+account manager, not a form.
+- Once you have enough to brief engineering (usually after 1-3 exchanges — \
+don't drag it out), STOP asking questions. Instead write a clean, structured \
+requirements document (numbered list, like a real spec) that captures \
+everything discussed, and set ready=true.
+- If the client's very first message is already a clear, sufficiently \
+detailed spec, you may finalize immediately without extra questions.
+
+You must respond with ONLY a JSON object, no markdown fences, no prose \
+outside the JSON, in exactly this shape:
+{"reply": "<what you say to the client — a question, or a short confirmation \
+if you're finalizing>", "ready": <true or false>, "requirements_doc": \
+"<the full structured requirements document — ONLY when ready is true, \
+otherwise empty string>"}"""
+
+# session_id -> list of {"role": "user"|"assistant", "content": str}
+_intake_sessions: dict[str, list] = {}
+
+
+class IntakeMessageRequest(BaseModel):
+    session_id: str
+    message: str
+
+
+def _call_account_manager(history: list) -> dict:
+    messages = [{"role": "system", "content": INTAKE_SYSTEM_PROMPT}] + history
+    response = litellm.completion(
+        model="groq/openai/gpt-oss-120b",
+        messages=messages,
+        temperature=0.4,
+        response_format={"type": "json_object"},
+    )
+    raw = response.choices[0].message.content
+    try:
+        parsed = json.loads(raw)
+    except json.JSONDecodeError:
+        # Model kabhi kabhi stray text de deta hai — fallback safe reply
+        parsed = {"reply": raw, "ready": False, "requirements_doc": ""}
+    return {
+        "reply": parsed.get("reply", ""),
+        "ready": bool(parsed.get("ready", False)),
+        "requirements_doc": parsed.get("requirements_doc", "") or "",
+    }
+
+
+@app.post("/api/intake/start")
+def start_intake():
+    session_id = str(uuid.uuid4())
+    opening = (
+        "Hi, I'm Sana from Forge & Co — thanks for reaching out! "
+        "Tell me a bit about what you're looking to build, and who it's for."
+    )
+    _intake_sessions[session_id] = [{"role": "assistant", "content": opening}]
+    return {"session_id": session_id, "reply": opening, "ready": False}
+
+
+@app.post("/api/intake/message")
+def intake_message(req: IntakeMessageRequest):
+    history = _intake_sessions.get(req.session_id)
+    if history is None:
+        raise HTTPException(status_code=404, detail="unknown session_id")
+
+    history.append({"role": "user", "content": req.message})
+    try:
+        result = _call_account_manager(history)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    history.append({"role": "assistant", "content": result["reply"]})
+    return {"session_id": req.session_id, **result}
 
 # Local dev ke liye — frontend (Vite, usually localhost:5173) se
 # requests allow karne ke liye CORS khol rahe hain.

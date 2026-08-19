@@ -29,8 +29,8 @@ export default function TerminalLogs({ logs, onClearLogs }) {
             <span className="dot dot-yellow" />
             <span className="dot dot-green" />
           </div>
-          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--terminal-text)' }}>
-            Pipeline Stream Console (Server-Sent Events)
+          <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--terminal-text)', fontFamily: 'var(--font-mono)' }}>
+            site log — live floor activity
           </span>
         </div>
 
@@ -123,7 +123,7 @@ export default function TerminalLogs({ logs, onClearLogs }) {
       <div className="terminal-body">
         {filteredLogs.length === 0 ? (
           <div style={{ color: '#64748b', fontStyle: 'italic', padding: '12px 0' }}>
-            // SSE event stream is idle. Launch the pipeline to view real-time agent output events...
+            // Floor is quiet. Send a work order to engineering to see live activity...
           </div>
         ) : (
           filteredLogs.map((log, index) => {
