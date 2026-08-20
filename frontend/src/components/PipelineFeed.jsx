@@ -4,6 +4,20 @@ import { AGENTS_METADATA } from '../data/agentInfo';
 import { generateClientSummary } from '../utils/summaryGenerator';
 import MarkdownRenderer from './MarkdownRenderer';
 import FeedbackPanel from './FeedbackPanel';
+import CodeExplorer from './CodeExplorer';
+import ArchitectureView from './ArchitectureView';
+import FindingsView from './FindingsView';
+import CoverageView from './CoverageView';
+
+const DETAIL_LABEL = {
+  architect: 'System Design',
+  developer: 'Source Code',
+  qa_tester: 'Test Results',
+  security_reviewer: 'Security Findings',
+  performance_reviewer: 'Performance Findings',
+  maintainability_reviewer: 'Maintainability Findings',
+  test_coverage_reviewer: 'Coverage Report',
+};
 
 function AgentCard({ agent, state, index, isCurrent, feedback, onFeedback, isLast }) {
   const [showDetails, setShowDetails] = useState(false);
@@ -102,14 +116,26 @@ function AgentCard({ agent, state, index, isCurrent, feedback, onFeedback, isLas
             </button>
           </div>
 
-          {/* Technical details (collapsed by default) */}
+          {/* Technical details (collapsed by default) — rendered per-agent-type */}
           {showDetails && (
             <div className="technical-details">
               <div className="details-header">
-                <span>Technical Details</span>
+                <span>{DETAIL_LABEL[agent.id] || 'Technical Details'}</span>
                 <span className="details-hint">For developers & technical review</span>
               </div>
-              <MarkdownRenderer content={state.output} />
+              {agent.id === 'architect' ? (
+                <ArchitectureView rawOutput={state.output} />
+              ) : agent.id === 'developer' ? (
+                <CodeExplorer rawOutput={state.output} />
+              ) : agent.id === 'qa_tester' ? (
+                <FindingsView rawOutput={state.output} mode="status" />
+              ) : ['security_reviewer', 'performance_reviewer', 'maintainability_reviewer'].includes(agent.id) ? (
+                <FindingsView rawOutput={state.output} mode="severity" />
+              ) : agent.id === 'test_coverage_reviewer' ? (
+                <CoverageView rawOutput={state.output} />
+              ) : (
+                <MarkdownRenderer content={state.output} />
+              )}
             </div>
           )}
 

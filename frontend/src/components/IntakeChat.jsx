@@ -80,8 +80,8 @@ export default function IntakeChat({ apiBase, onFinalized, locked }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
         <div className="chat-avatar" style={{ width: '34px', height: '34px' }}>S</div>
         <div>
-          <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Sana — Account Manager</div>
-          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Front desk, Forge & Co.</div>
+          <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>Nex — Account Manager</div>
+          <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Front desk, Nexbuild</div>
         </div>
       </div>
 
@@ -109,7 +109,8 @@ export default function IntakeChat({ apiBase, onFinalized, locked }) {
             <span>Work Order Ready</span>
           </div>
           <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '14px' }}>
-            Requirements confirmed. Send this to the engineering floor — 8 specialists pick it up from here.
+            Requirements confirmed. Happy with this? Send it to the engineering floor — or just
+            reply below to change anything first.
           </p>
           <button
             className="btn-primary"
@@ -117,7 +118,7 @@ export default function IntakeChat({ apiBase, onFinalized, locked }) {
             onClick={() => onFinalized(finalizedDoc)}
             style={{ width: '100%', justifyContent: 'center' }}
           >
-            {locked ? 'Sent to engineering' : 'Send to Engineering'}
+            {locked ? 'Sent to engineering' : 'Send to Engineering Team'}
             {!locked && <ArrowRight size={16} />}
           </button>
         </div>

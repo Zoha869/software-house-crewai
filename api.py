@@ -41,7 +41,7 @@ app = FastAPI(title="Software House Crew API")
 # (crew -> agents) se patch ho chuka hai, is liye litellm.completion
 # yahan bhi automatically rotating keys use karega.
 
-INTAKE_SYSTEM_PROMPT = """You are Sana, the Account Manager at Forge & Co, a boutique \
+INTAKE_SYSTEM_PROMPT = """You are Nex, the Account Manager at Nexbuild, a boutique \
 software house. A prospective client is describing a project they want built. \
 Your job is to run a short, friendly intake consultation before engineering \
 picks it up.
@@ -56,9 +56,16 @@ account manager, not a form.
 - Once you have enough to brief engineering (usually after 1-3 exchanges — \
 don't drag it out), STOP asking questions. Instead write a clean, structured \
 requirements document (numbered list, like a real spec) that captures \
-everything discussed, and set ready=true.
+everything discussed, set ready=true, AND in your "reply" explicitly summarize \
+the key points back to the client and ask them to confirm — e.g. "Here's what \
+I've got: ... Does that look right, or is there anything to add or change before \
+I send this to engineering?" Never silently finalize without asking this.
+- If the client responds after ready=true with a correction, addition, or "actually...", \
+treat it as still refining — update the requirements document accordingly, keep \
+ready=true, and again summarize + ask for confirmation in your reply.
 - If the client's very first message is already a clear, sufficiently \
-detailed spec, you may finalize immediately without extra questions.
+detailed spec, you may finalize immediately without extra questions, but still \
+summarize it back and ask for confirmation as above.
 
 You must respond with ONLY a JSON object, no markdown fences, no prose \
 outside the JSON, in exactly this shape:
@@ -88,7 +95,7 @@ def _call_account_manager(history: list) -> dict:
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        # Model kabhi kabhi stray text de deta hai — fallback safe reply
+        
         parsed = {"reply": raw, "ready": False, "requirements_doc": ""}
     return {
         "reply": parsed.get("reply", ""),
@@ -101,7 +108,7 @@ def _call_account_manager(history: list) -> dict:
 def start_intake():
     session_id = str(uuid.uuid4())
     opening = (
-        "Hi, I'm Sana from Forge & Co — thanks for reaching out! "
+        "Hi, I'm Nex from Nexbuild — thanks for reaching out! "
         "Tell me a bit about what you're looking to build, and who it's for."
     )
     _intake_sessions[session_id] = [{"role": "assistant", "content": opening}]
@@ -123,8 +130,7 @@ def intake_message(req: IntakeMessageRequest):
     history.append({"role": "assistant", "content": result["reply"]})
     return {"session_id": req.session_id, **result}
 
-# Local dev ke liye — frontend (Vite, usually localhost:5173) se
-# requests allow karne ke liye CORS khol rahe hain.
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -132,7 +138,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# run_id -> queue.Queue() mapping, har active run ke events yahan jaate hain.
+# run_id -> queue.Queue() mapping,
 _runs: dict[str, "queue.Queue"] = {}
 
 
@@ -163,7 +169,7 @@ def _run_crew_job(run_id: str, requirements: str):
             })
 
     try:
-        # Pehle agent ka "start" event turant bhej dete hain.
+        
         q.put({"type": "agent_start", "index": 0, "agent": AGENT_SEQUENCE[0]})
 
         crew = build_crew(requirements, task_callback=on_task_done)
@@ -195,11 +201,11 @@ def stream_run(run_id: str):
             yield f"data: {json.dumps({'type': 'error', 'message': 'unknown run_id'})}\n\n"
             return
         while True:
-            event = q.get()  # blocking — thread se aane wale event ka wait
+            event = q.get()  # blocking 
             if event["type"] == "_end_":
                 break
             yield f"data: {json.dumps(event)}\n\n"
-        # Run khatam hone ke baad memory se hata dete hain.
+        # Run 
         _runs.pop(run_id, None)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")

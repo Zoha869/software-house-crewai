@@ -23,7 +23,7 @@ export default function Navbar({ theme, toggleTheme, serverStatus, onReset, isRu
           </div>
           <div>
             <h1 style={{ fontSize: '1.15rem', fontWeight: 700, letterSpacing: '-0.01em', margin: 0 }}>
-              Forge <span className="gradient-text">& Co.</span>
+              Nex<span className="gradient-text">build</span>
             </h1>
             <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: 0, fontFamily: 'var(--font-mono)' }}>
               autonomous design-build studio

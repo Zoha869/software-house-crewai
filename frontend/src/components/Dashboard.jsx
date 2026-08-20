@@ -5,6 +5,9 @@ import { getProjects, saveProject, deleteProject, extractProjectName } from '../
 import PipelineFeed from './PipelineFeed';
 import IntakeChat from './IntakeChat';
 import FinalDiagram from './FinalDiagram';
+import LivePreview from './LivePreview';
+import RevisionPanel from './RevisionPanel';
+import { parseCodeFiles } from '../utils/codeParser';
 
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -32,6 +35,10 @@ export default function Dashboard({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [feedback, setFeedback] = useState({});
   const [projectName, setProjectName] = useState('');
+  const [revisionNumber, setRevisionNumber] = useState(1);
+  const [revisionHistory, setRevisionHistory] = useState([]);
+  const [approved, setApproved] = useState(false);
+  const [rating, setRating] = useState(0);
 
   const eventSourceRef = useRef(null);
   const timerRef = useRef(null);
@@ -65,6 +72,10 @@ export default function Dashboard({
     setAgentStates(project.agentStates || AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })));
     setFeedback(project.feedback || {});
     setProjectName(project.name || extractProjectName(project.requirements));
+    setRevisionNumber(project.revisionNumber || 1);
+    setRevisionHistory(project.revisionHistory || []);
+    setApproved(!!project.approved);
+    setRating(project.rating || 0);
     setElapsedSeconds(0);
     setRunError(null);
   };
@@ -81,6 +92,10 @@ export default function Dashboard({
       agentStates,
       finalOutput,
       feedback,
+      revisionNumber,
+      revisionHistory,
+      approved,
+      rating,
       ...updates,
     };
     saveProject(project);
@@ -92,7 +107,7 @@ export default function Dashboard({
     if (activeProjectId && phase !== 'intake') {
       persistProject();
     }
-  }, [phase, agentStates, finalOutput, feedback, projectName]);
+  }, [phase, agentStates, finalOutput, feedback, projectName, revisionNumber, revisionHistory, approved, rating]);
 
   const handleStartIntake = () => {
     setView('intake');
@@ -104,44 +119,20 @@ export default function Dashboard({
     setAgentStates(AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })));
     setFeedback({});
     setProjectName('');
+    setRevisionNumber(1);
+    setRevisionHistory([]);
+    setApproved(false);
+    setRating(0);
     setElapsedSeconds(0);
     setCurrentAgentIndex(null);
   };
 
-  const handleFinalized = async (finalizedRequirements) => {
-    // Create a new project entry
-    const newId = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    const name = extractProjectName(finalizedRequirements);
-    
-    setActiveProjectId(newId);
-    setProjectName(name);
-    setRequirements(finalizedRequirements);
-    setPhase('running');
-    setRunError(null);
-    setFinalOutput(null);
-    setElapsedSeconds(0);
-    setAgentStates(AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })));
-    setFeedback({});
-    setView('project');
-
-    // Save initial project
-    saveProject({
-      id: newId,
-      name,
-      requirements: finalizedRequirements,
-      createdAt: Date.now(),
-      status: 'running',
-      agentStates: AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })),
-      finalOutput: null,
-      feedback: {},
-    });
-    setProjects(getProjects());
-
+  const runPipeline = async (reqText) => {
     try {
       const response = await fetch(`${apiBase}/api/run`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ requirements: finalizedRequirements }),
+        body: JSON.stringify({ requirements: reqText }),
       });
       if (!response.ok) throw new Error(`Server returned status ${response.status}: ${response.statusText}`);
 
@@ -192,6 +183,76 @@ export default function Dashboard({
     }
   };
 
+  const handleFinalized = async (finalizedRequirements) => {
+    // Create a new project entry
+    const newId = `proj_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const name = extractProjectName(finalizedRequirements);
+    
+    setActiveProjectId(newId);
+    setProjectName(name);
+    setRequirements(finalizedRequirements);
+    setPhase('running');
+    setRunError(null);
+    setFinalOutput(null);
+    setElapsedSeconds(0);
+    setAgentStates(AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })));
+    setFeedback({});
+    setRevisionNumber(1);
+    setRevisionHistory([]);
+    setApproved(false);
+    setRating(0);
+    setView('project');
+
+    // Save initial project
+    saveProject({
+      id: newId,
+      name,
+      requirements: finalizedRequirements,
+      createdAt: Date.now(),
+      status: 'running',
+      agentStates: AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })),
+      finalOutput: null,
+      feedback: {},
+      revisionNumber: 1,
+      revisionHistory: [],
+      approved: false,
+      rating: 0,
+    });
+    setProjects(getProjects());
+
+    runPipeline(finalizedRequirements);
+  };
+
+  const handleApprove = (ratingValue) => {
+    setRating(ratingValue);
+    setApproved(true);
+  };
+
+  const handleRequestChanges = (ratingValue, changeText) => {
+    // Keep a record of this round before starting the next one.
+    setRevisionHistory(prev => [
+      ...prev,
+      { revisionNumber, rating: ratingValue, changeRequest: changeText, timestamp: Date.now() },
+    ]);
+
+    const nextRevision = revisionNumber + 1;
+    const amendedRequirements = `${requirements}\n\n## Client Revision Request (Round ${nextRevision})\nThe client reviewed the previous build and rated it ${ratingValue}/5. Please address this feedback:\n${changeText}`;
+
+    setRating(ratingValue);
+    setApproved(false);
+    setRevisionNumber(nextRevision);
+    setRequirements(amendedRequirements);
+    setPhase('running');
+    setRunError(null);
+    setFinalOutput(null);
+    setElapsedSeconds(0);
+    setCurrentAgentIndex(null);
+    setAgentStates(AGENTS_METADATA.map(() => ({ status: 'pending', output: '' })));
+    setFeedback({});
+
+    runPipeline(amendedRequirements);
+  };
+
   const handleDeleteProject = (id, e) => {
     e.stopPropagation();
     deleteProject(id);
@@ -231,9 +292,9 @@ export default function Dashboard({
       <aside className={`dashboard-sidebar ${sidebarOpen ? 'open' : 'closed'}`}>
         <div className="sidebar-header">
           <div className="sidebar-brand">
-            <div className="sidebar-logo">F</div>
+            <div className="sidebar-logo">N</div>
             <div className="sidebar-brand-text">
-              <strong>Forge & Co.</strong>
+              <strong>Nexbuild</strong>
               <span>Client Portal</span>
             </div>
           </div>
@@ -253,7 +314,10 @@ export default function Dashboard({
               <span>New Project</span>
             </button>
 
-            <div className="sidebar-section-label">Projects</div>
+            <div className="sidebar-section-label">
+              <span>Projects</span>
+              {projects.length > 0 && <span className="sidebar-count-badge">{projects.length}</span>}
+            </div>
             <div className="sidebar-projects">
               {projects.length === 0 ? (
                 <div className="sidebar-empty">
@@ -308,7 +372,7 @@ export default function Dashboard({
             )}
             {view === 'project' && activeProjectId ? (
               <div className="topbar-project-info">
-                <h2>{projectName}</h2>
+                <h2>{projectName}{revisionNumber > 1 ? ` — Revision ${revisionNumber}` : ''}</h2>
                 <div className="topbar-progress">
                   <div className="progress-track">
                     <div className="progress-fill" style={{ width: `${progressPct}%` }} />
@@ -382,11 +446,29 @@ export default function Dashboard({
               />
 
               {phase === 'completed' && (
-                <FinalDiagram
-                  agentStates={agentStates}
-                  projectName={projectName}
-                  requirements={requirements}
-                />
+                <>
+                  <FinalDiagram
+                    agentStates={agentStates}
+                    projectName={projectName}
+                    requirements={requirements}
+                  />
+                  <section className="preview-section">
+                    <div className="preview-section-header">
+                      <div className="eyebrow">Try It Out</div>
+                      <h2>Live Preview</h2>
+                      <p>A best-effort render of what the Developer agent built — for browser-based projects you can interact with it right here.</p>
+                    </div>
+                    <LivePreview files={parseCodeFiles(agentStates[2]?.output)} />
+                  </section>
+                  <RevisionPanel
+                    revisionNumber={revisionNumber}
+                    revisionHistory={revisionHistory}
+                    approved={approved}
+                    rating={rating}
+                    onApprove={handleApprove}
+                    onRequestChanges={handleRequestChanges}
+                  />
+                </>
               )}
             </>
           )}

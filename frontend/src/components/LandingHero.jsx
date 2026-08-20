@@ -13,7 +13,7 @@ export default function LandingHero() {
     <section style={{ marginBottom: '36px' }}>
       <div style={{ maxWidth: '760px', margin: '0 auto 26px', textAlign: 'center' }}>
         <div className="eyebrow" style={{ justifyContent: 'center', marginBottom: '16px' }}>
-          Forge & Co. — Design-Build Studio
+          Nexbuild — Design-Build Studio
         </div>
         <h1 style={{ fontSize: 'clamp(1.8rem, 4vw, 2.7rem)', fontWeight: 700, lineHeight: 1.18, marginBottom: '14px' }}>
           Tell us what to build. <span className="gradient-text">Watch it get drafted, built, and audited</span> — sheet by sheet.
@@ -32,7 +32,7 @@ export default function LandingHero() {
         </div>
         <div>
           <div className="tb-label">Studio</div>
-          <div className="tb-value">Forge & Co.</div>
+          <div className="tb-value">Nexbuild</div>
         </div>
         <div>
           <div className="tb-label">Sheet Count</div>

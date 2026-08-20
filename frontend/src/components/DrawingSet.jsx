@@ -73,7 +73,7 @@ export default function DrawingSet({
   };
 
   const handleDownloadFullReport = () => {
-    let report = `# Forge & Co. — Engineering Report\n\n`;
+    let report = `# Nexbuild — Engineering Report\n\n`;
     AGENTS_METADATA.forEach((agent, idx) => {
       const state = agentStates[idx] || {};
       report += `## Sheet ${agent.sheet} — ${agent.name} (${agent.role})\n`;

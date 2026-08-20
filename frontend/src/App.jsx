@@ -79,7 +79,7 @@ export default function App() {
             </div>
             <div>
               <h1 style={{ fontSize: '1.05rem', fontWeight: 700, letterSpacing: '-0.01em', margin: 0 }}>
-                Forge <span className="gradient-text">& Co.</span>
+                Nex<span className="gradient-text">build</span>
               </h1>
               <p style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', margin: 0, fontFamily: 'var(--font-mono)' }}>
                 client portal
@@ -159,7 +159,7 @@ export default function App() {
         marginTop: '20px'
       }}>
         <p style={{ margin: 0, fontFamily: 'var(--font-mono)' }}>
-          Forge & Co. — AI-powered software studio · CrewAI & FastAPI · React & Vite
+          Nexbuild — AI-powered software studio · CrewAI & FastAPI · React & Vite
         </p>
       </footer>
     </div>
