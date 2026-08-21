@@ -11,7 +11,7 @@ if sys.platform == "win32":
         pass
 
 BACKEND_URL = "http://20.174.0.34:8000"
-FRONTEND_URL = "http://localhost:5173"
+FRONTEND_URL = "https://software-house-crewai-nwbf.vercel.app"
 
 def test_health():
     print("1. Checking Backend Health (/api/health)...")
@@ -20,7 +20,7 @@ def test_health():
     assert r.status_code == 200, "Backend health check failed"
 
 def test_frontend():
-    print("2. Checking Frontend HTTP Server (http://localhost:5173)...")
+    print("2. Checking Frontend HTTP Server (https://software-house-crewai-nwbf.vercel.app)...")
     r = requests.get(FRONTEND_URL, timeout=5)
     print(f"   Frontend Status: {r.status_code}, Length: {len(r.text)} bytes")
     assert r.status_code == 200, "Frontend server failed"
