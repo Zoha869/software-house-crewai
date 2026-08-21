@@ -1,0 +1,10 @@
+venv/
+_pycache_/
+*.pyc
+.env
+.git/
+.gitignore
+node_modules/
+frontend/node_modules/
+*.log
+.vscode/
