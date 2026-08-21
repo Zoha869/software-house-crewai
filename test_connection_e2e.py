@@ -10,7 +10,7 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-BACKEND_URL = "http://20.174.0.34:8000"
+BACKEND_URL = "https://projects-phentermine-okay-cookbook.trycloudflare.com"
 FRONTEND_URL = "https://software-house-crewai-nwbf.vercel.app"
 
 def test_health():

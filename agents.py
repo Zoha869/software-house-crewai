@@ -5,6 +5,7 @@ import sys
 os.environ["CREWAI_DISABLE_TELEMETRY"] = "true"
 os.environ["OTEL_SDK_DISABLED"] = "true"
 os.environ["PYTHONIOENCODING"] = "utf-8"
+os.environ["CREWAI_PROMPT_CACHING"] = "false"
 
 if sys.platform == "win32":
     try:
