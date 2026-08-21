@@ -9,7 +9,7 @@ import LivePreview from './LivePreview';
 import RevisionPanel from './RevisionPanel';
 import { parseCodeFiles } from '../utils/codeParser';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function Dashboard({
   apiBase,

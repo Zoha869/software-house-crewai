@@ -3,7 +3,7 @@ import LandingPage from './components/LandingPage';
 import Dashboard from './components/Dashboard';
 import { getProjects } from './utils/projectStore';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 export default function App() {
   const [theme, setTheme] = useState(() => localStorage.getItem('sh_theme') || 'dark');

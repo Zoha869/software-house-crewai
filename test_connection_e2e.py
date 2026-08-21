@@ -10,7 +10,7 @@ if sys.platform == "win32":
     except Exception:
         pass
 
-BACKEND_URL = "http://localhost:8000"
+BACKEND_URL = "http://20.174.0.34:8000"
 FRONTEND_URL = "http://localhost:5173"
 
 def test_health():
