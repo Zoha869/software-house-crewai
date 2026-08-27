@@ -25,6 +25,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from crew import build_crew, AGENT_SEQUENCE
+from github_push_client import push_project_to_github
 
 app = FastAPI(title="Software House Crew API")
 
@@ -214,3 +215,41 @@ def stream_run(run_id: str):
 @app.get("/api/health")
 def health():
     return {"status": "ok"}
+
+
+# ---------------------------------------------------------------------
+# Push generated code to GitHub (via the github_server MCP tools)
+# ---------------------------------------------------------------------
+class GithubFile(BaseModel):
+    path: str
+    code: str
+
+
+class GithubPushRequest(BaseModel):
+    github_token: str
+    repo_name: str
+    private: bool = False
+    files: list[GithubFile]
+
+
+@app.post("/api/push-to-github")
+def push_to_github(req: GithubPushRequest):
+    files_dict = {f.path: f.code for f in req.files if f.path and f.code is not None}
+    if not files_dict:
+        raise HTTPException(status_code=400, detail="No files to push.")
+
+    try:
+        result = push_project_to_github(
+            github_token=req.github_token,
+            repo_name=req.repo_name,
+            files=files_dict,
+            private=req.private,
+        )
+    except Exception as exc:  # noqa: BLE001 — user-facing error dikhana hai
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+
+    if not result.get("ok"):
+        detail = result.get("error") or f"Push failed at step: {result.get('step', '?')}"
+        raise HTTPException(status_code=502, detail=detail)
+
+    return result

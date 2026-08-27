@@ -5,7 +5,7 @@ import { getProjects, saveProject, deleteProject, extractProjectName } from '../
 import PipelineFeed from './PipelineFeed';
 import IntakeChat from './IntakeChat';
 import FinalDiagram from './FinalDiagram';
-import LivePreview from './LivePreview';
+import GithubPushPanel from './GithubPushPanel';
 import RevisionPanel from './RevisionPanel';
 import { parseCodeFiles } from '../utils/codeParser';
 
@@ -454,11 +454,15 @@ export default function Dashboard({
                   />
                   <section className="preview-section">
                     <div className="preview-section-header">
-                      <div className="eyebrow">Try It Out</div>
-                      <h2>Live Preview</h2>
-                      <p>A best-effort render of what the Developer agent built — for browser-based projects you can interact with it right here.</p>
+                      <div className="eyebrow">Ship It</div>
+                      <h2>Push to GitHub</h2>
+                      <p>Send the Developer agent's code straight to a GitHub repository — no need to copy files by hand.</p>
                     </div>
-                    <LivePreview files={parseCodeFiles(agentStates[2]?.output)} />
+                    <GithubPushPanel
+                      apiBase={apiBase}
+                      files={parseCodeFiles(agentStates[2]?.output)}
+                      projectName={projectName}
+                    />
                   </section>
                   <RevisionPanel
                     revisionNumber={revisionNumber}

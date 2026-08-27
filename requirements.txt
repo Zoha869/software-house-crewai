@@ -3,3 +3,5 @@ crewai-tools
 python-dotenv
 fastapi
 uvicorn[standard]
+mcp
+requests

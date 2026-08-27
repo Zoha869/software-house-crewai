@@ -16,7 +16,7 @@ def enable_key_rotation(api_keys, cooldown_seconds=65):
     """
     global _enabled
     if _enabled:
-        return  # dobara enable na ho
+        return  # dobara enable n
 
     keys = list(api_keys)
     if len(keys) < 2:
