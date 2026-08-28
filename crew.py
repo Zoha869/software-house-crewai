@@ -29,6 +29,27 @@ import litellm
 litellm.drop_params = True
 
 # ---------------------------------------------------------------------
+# The above drop_params fix does NOT stop the 'cache_breakpoint' error.
+# CrewAI (as of 1.15.x) unconditionally stamps a 'cache_breakpoint' key
+# onto every message dict in crew_agent_executor.py's _setup_messages(),
+# regardless of the CREWAI_PROMPT_CACHING env var. That key is only
+# stripped/translated for the Anthropic provider path — for every other
+# provider (including Groq) it is passed straight through litellm to the
+# provider's chat API, which rejects the unknown property. drop_params
+# can't fix this because it only drops unsupported top-level completion
+# kwargs, not keys nested inside message dicts. So we disable the
+# stamping at its source instead.
+# ---------------------------------------------------------------------
+import crewai.llms.cache as _crewai_cache
+
+
+def _noop_mark_cache_breakpoint(message):
+    return dict(message)
+
+
+_crewai_cache.mark_cache_breakpoint = _noop_mark_cache_breakpoint
+
+# ---------------------------------------------------------------------
 # Windows UTF-8
 # ---------------------------------------------------------------------
 if sys.platform == "win32":
