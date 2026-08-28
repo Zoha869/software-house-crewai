@@ -25,7 +25,6 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from crew import build_crew, AGENT_SEQUENCE
-from github_push_client import push_project_to_github
 
 app = FastAPI(title="Software House Crew API")
 
@@ -234,6 +233,7 @@ class GithubPushRequest(BaseModel):
 
 @app.post("/api/push-to-github")
 def push_to_github(req: GithubPushRequest):
+    from github_push_client import push_project_to_github
     files_dict = {f.path: f.code for f in req.files if f.path and f.code is not None}
     if not files_dict:
         raise HTTPException(status_code=400, detail="No files to push.")
